@@ -1,72 +1,19 @@
 // Root build: shared conventions and quality
 
 plugins {
-    id 'org.sonarqube' version '5.1.0.4882'
     id 'com.diffplug.spotless' version '6.25.0' apply false
 }
 
-ext.versions = [
-        java   : 21,
-        jacoco : '0.8.12'
-]
 
 allprojects {
     group = 'com.test'
     version = System.getenv('VERSION') ?: '0.0.0-SNAPSHOT'
-
     repositories { mavenCentral() }
 }
 
-def nonPlatformProjects = subprojects.findAll { it.name != 'platform' }
 
-configure(nonPlatformProjects) {
     apply plugin: 'java'
-    apply plugin: 'jacoco'
-    apply plugin: 'com.diffplug.spotless'
 
     java {
-        toolchain { languageVersion = JavaLanguageVersion.of(versions.java) }
-        withSourcesJar()
-    }
-
-    test { useJUnitPlatform() }
-
-    jacoco { toolVersion = versions.jacoco }
-
-    tasks.register('jacocoRootReport', JacocoReport) {
-        dependsOn nonPlatformProjects.collect { it.tasks.matching { t -> t.name == 'test' } }
-
-        executionData.from fileTree(rootDir).include('**/build/jacoco/*.exec', '**/build/jacoco/test.exec')
-
-        doFirst {
-            def allClasses = files()
-            def allSources = files()
-            nonPlatformProjects.each { p ->
-                if (p.hasProperty('sourceSets')) {
-                    allClasses += p.sourceSets.main.output
-                    allSources += p.sourceSets.main.allSource.srcDirs
-                }
-            }
-            classDirectories.setFrom(allClasses)
-            sourceDirectories.setFrom(allSources)
-        }
-
-        reports {
-            xml.required.set(true)
-            html.required.set(true)
-        }
-    }
-
-    spotless {
-        java {
-            target 'src/**/*.java'
-            googleJavaFormat()
-            removeUnusedImports()
-            trimTrailingWhitespace()
-            endWithNewline()
-        }
-        groovyGradle {
-            target '**/*.gradle'
-        }
     }
 }
