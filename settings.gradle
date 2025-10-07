@@ -1,0 +1,9 @@
+rootProject.name = 'test-monorepo'
+
+include(
+        'platform',
+        'services:test-1-service',
+        'services:test-2-service',
+        'services:test-3-service',
+        'services:test-4-service'
+)
